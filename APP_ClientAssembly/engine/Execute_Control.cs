@@ -3,11 +3,13 @@ namespace Avril_FSD.ClientAssembly
 {
     public class Execute_Control
     {
+        private bool _flag_STATE_IO_Direction;
         private bool _flag_SystemInitialised;
         private bool[] _flag_ThreadInitialised;
 
         public Execute_Control(int numberOfCores)
         {
+            _flag_STATE_IO_Direction = false;
             Set_flag_SystemInitialised(true);
 
             _flag_ThreadInitialised = new bool[numberOfCores];
@@ -28,6 +30,11 @@ namespace Avril_FSD.ClientAssembly
                 }
             }
         }
+        public bool Get_flag_STATE_IO_Direction()
+        {
+            return _flag_STATE_IO_Direction;
+        }
+
         public bool Get_flag_SystemInitialised()
         {
             return _flag_SystemInitialised;
@@ -36,7 +43,10 @@ namespace Avril_FSD.ClientAssembly
         {   
             return _flag_ThreadInitialised[coreId];
         }
-
+        public void Set_flag_STATE_IO_Direction(bool flag)
+        {
+            _flag_STATE_IO_Direction = flag;
+        }
         private void Set_flag_SystemInitialised(bool flag)
         {
             _flag_SystemInitialised = flag;

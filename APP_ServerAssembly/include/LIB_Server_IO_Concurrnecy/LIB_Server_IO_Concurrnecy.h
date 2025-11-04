@@ -18,7 +18,7 @@ namespace Avril_FSD
 		CLIBServerIOConcurrnecy(void);
 		// TODO: add your methods here.
 		static void* Initialise_Server_Concurrency();
-		static void Initalise_Programs(Avril_FSD::Framework_Server* obj);
+		static void Initalise_Programs(class Avril_FSD::Framework_Server* obj);
 		static void Flip_InBufferToWrite(class Avril_FSD::Framework_Server* obj);
 		static void Flip_OutBufferToWrite(class Avril_FSD::Framework_Server* obj);
 		static bool Get_flag_isNewInputDataReady(class Avril_FSD::Framework_Server* obj);
