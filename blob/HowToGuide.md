@@ -1141,46 +1141,78 @@ https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP
             }
         }
 ````
-Decode NetworkingSteam At Client Output Recieve
+Encode NetworkingSteam At Server Output Send
 https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ServerAssembly/engine/IO_Listen_Respond.cs
 ````
-        public void Decode_NetworkingSteam_At_Client_Recieve(Avril_FSD.ClientAssembly.Framework_Client obj, Avril_FSD.ClientAssembly.Outputs.Output output, byte[] buffer)
+namespace Avril_FSD.ServerAssembly
+{
+    public class IO_Listen_Respond
+    {
+     	public void Encode_NetworkingSteam_At_Server_Output(Avril_FSD.ServerAssembly.Framework_Server obj, Avril_FSD.ServerAssembly.Outputs.Output output, byte[] data)
         {
-            output.Set_praiseEventId(buffer[0]);
-            output.Set_playerId(buffer[1]);
+            data[0] = output.Get_praiseEventId();
+            data[1] = output.Get_out_playerId();
             switch (output.Get_praiseEventId())
             {
                 case 0:
-
                     break;
 
                 case 1:
-                    var subset = (Avril_FSD.ClientAssembly.Praise_Files.Praise1_Output)output.Get_praiseOutputBuffer_Subset();
-                    Vector3 tempVector = new Vector3(0);
-                    tempVector.X = BitConverter.ToSingle(buffer, 2);
-                    tempVector.Y = BitConverter.ToSingle(buffer, 6);
-                    tempVector.Z = BitConverter.ToSingle(buffer, 10);
-                    subset.Set_fowards(tempVector);
-                    tempVector.X = BitConverter.ToSingle(buffer, 14);
-                    tempVector.Y = BitConverter.ToSingle(buffer, 18);
-                    tempVector.Z = BitConverter.ToSingle(buffer, 22);
-                    subset.Set_right(tempVector);
-                    tempVector.X = BitConverter.ToSingle(buffer, 26);
-                    tempVector.Y = BitConverter.ToSingle(buffer, 30);
-                    tempVector.Z = BitConverter.ToSingle(buffer, 34);
-                    subset.Set_up(tempVector);
+                    var subset = (Avril_FSD.ServerAssembly.Praise_Files.Praise1_Output)output.GetOutputBufferSubset();
+                    byte[] tempFloat = BitConverter.GetBytes(subset.Get_fowards().X);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 2] = tempFloat[index];
+                    }
+                    tempFloat = BitConverter.GetBytes(subset.Get_fowards().Y);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 6] = tempFloat[index];
+                    }
+                    tempFloat = BitConverter.GetBytes(subset.Get_fowards().Z);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 10] = tempFloat[index];
+                    }
+                    tempFloat = BitConverter.GetBytes(subset.Get_right().X);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 14] = tempFloat[index];
+                    }
+                    tempFloat = BitConverter.GetBytes(subset.Get_right().Y);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 18] = tempFloat[index];
+                    }
+                    tempFloat = BitConverter.GetBytes(subset.Get_right().Z);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 22] = tempFloat[index];
+                    }
+                    tempFloat = BitConverter.GetBytes(subset.Get_up().X);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 26] = tempFloat[index];
+                    }
+                    tempFloat = BitConverter.GetBytes(subset.Get_up().Y);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 30] = tempFloat[index];
+                    }
+                    tempFloat = BitConverter.GetBytes(subset.Get_up().Z);
+                    for (byte index = 0; index < tempFloat.Length; index++)
+                    {
+                        data[index + 34] = tempFloat[index];
+                    }
                     break;
+
             }
         }
 ````
-Clinet End Thread Input/Output - Recieve Stack of Server Output Recieve
+Client Thread Input/Output Loop
 https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/Networking_Client.cs
 ````
-namespace Avril_FSD.ClientAssembly
-{
-    public class Networking_Client
-    {
-		public void Thread_IO_Client(byte threadId)
+public void Thread_IO_Client(byte threadId)
         {
             Avril_FSD.ClientAssembly.Framework_Client obj = Avril_FSD.ClientAssembly.Program.Get_framework_Client();
             bool doneOnce = false;
@@ -1275,6 +1307,38 @@ MessageCallback message = (in NetworkingMessage netMessage) => {
 
                     Thread.Sleep(15);
                 }
+            }
+        }
+````
+Decode NetworkingSteam At Client Output Recieve
+https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ServerAssembly/engine/IO_Listen_Respond.cs
+````
+        public void Decode_NetworkingSteam_At_Client_Recieve(Avril_FSD.ClientAssembly.Framework_Client obj, Avril_FSD.ClientAssembly.Outputs.Output output, byte[] buffer)
+        {
+            output.Set_praiseEventId(buffer[0]);
+            output.Set_playerId(buffer[1]);
+            switch (output.Get_praiseEventId())
+            {
+                case 0:
+
+                    break;
+
+                case 1:
+                    var subset = (Avril_FSD.ClientAssembly.Praise_Files.Praise1_Output)output.Get_praiseOutputBuffer_Subset();
+                    Vector3 tempVector = new Vector3(0);
+                    tempVector.X = BitConverter.ToSingle(buffer, 2);
+                    tempVector.Y = BitConverter.ToSingle(buffer, 6);
+                    tempVector.Z = BitConverter.ToSingle(buffer, 10);
+                    subset.Set_fowards(tempVector);
+                    tempVector.X = BitConverter.ToSingle(buffer, 14);
+                    tempVector.Y = BitConverter.ToSingle(buffer, 18);
+                    tempVector.Z = BitConverter.ToSingle(buffer, 22);
+                    subset.Set_right(tempVector);
+                    tempVector.X = BitConverter.ToSingle(buffer, 26);
+                    tempVector.Y = BitConverter.ToSingle(buffer, 30);
+                    tempVector.Z = BitConverter.ToSingle(buffer, 34);
+                    subset.Set_up(tempVector);
+                    break;
             }
         }
 ````
