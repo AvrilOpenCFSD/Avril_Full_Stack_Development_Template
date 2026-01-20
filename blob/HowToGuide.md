@@ -543,7 +543,7 @@ namespace Avril_FSD.ClientAssembly
     }
 }
 ````
-Thread Input/Output Pop Client Input Action From Stack of Client Input Actions
+Thread Input/Output Pop Client Input Action From Stack and Network Send
 https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/Networking_Client.cs
 ````
 public void Thread_IO_Client(byte threadId)
