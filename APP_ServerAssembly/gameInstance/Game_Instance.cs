@@ -142,6 +142,9 @@ namespace Avril_FSD.ServerAssembly
         public override void Exit()
         {
             System.Console.WriteLine("Exit called");
+            Avril_FSD.ServerAssembly.Framework_Server obj = Avril_FSD.ServerAssembly.Program.Get_framework_Server();
+            obj.Get_server().Get_execute().Get_execute_Control().Set_exitApplication(true);
+            obj.Get_server().Get_execute().Get_networking_Server().DeInitialise_networking_Server();
             _gameObjectFactory.Dispose();
             _solidProgram.Dispose();
             _texturedProgram.Dispose();
@@ -166,7 +169,7 @@ namespace Avril_FSD.ServerAssembly
             {
                 item.Update(_time, e.Time);
             }
-            if(Avril_FSD.ServerAssembly.Program.Get_framework_Server().Get_server().Get_execute().Get_execute_Control().Get_flag_isInitialised_ServerShell())
+            if(Avril_FSD.ServerAssembly.Program.Get_framework_Server().Get_server().Get_execute().Get_execute_Control().Get_exitApplication() == false)
             {
                 HandleKeyboard(e.Time);
                 HandleMouse();
@@ -184,7 +187,7 @@ namespace Avril_FSD.ServerAssembly
         }
         private void HandleMouse()
         {
-            Console.WriteLine("TESTBENCH => HandleMouse");
+            //Console.WriteLine("TESTBENCH => HandleMouse");
             MouseState mouseState = Mouse.GetCursorState();
         }
         private void HandleKeyboard(double dt)
@@ -213,58 +216,6 @@ namespace Avril_FSD.ServerAssembly
                 
             }
             _lastKeyboardState = keyState;
-            /*
-                    Vector3 fowards = new Vector3(0);
-                    Vector3 backwards = new Vector3(0);
-                    Vector3 left = new Vector3(0);
-                    Vector3 right = new Vector3(0);
-                    if (keyState.IsKeyDown(Key.W))
-                    {
-                        Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().SetIsPraiseEvent(2, true);
-                        fowards = _gameObjectFactory.Get_player().Get_CameraFPOP().Get_fowards();
-                    }
-                    if (keyState.IsKeyDown(Key.S))
-                    {
-                        Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().SetIsPraiseEvent(3, true);
-                        backwards = - _gameObjectFactory.Get_player().Get_CameraFPOP().Get_fowards();
-                    }
-                    if (keyState.IsKeyDown(Key.A))
-                    {
-                        Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().SetIsPraiseEvent(4, true);
-                        right = _gameObjectFactory.Get_player().Get_CameraFPOP().Get_right();
-                    }
-                    if (keyState.IsKeyDown(Key.D))
-                    {
-                        Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().SetIsPraiseEvent(5, true);
-                        left = - _gameObjectFactory.Get_player().Get_CameraFPOP().Get_right();
-                    }
-                    if (Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().GetFlag_IsPraiseEvent(2) == true
-                        || Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().GetFlag_IsPraiseEvent(3) == true
-                        || Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().GetFlag_IsPraiseEvent(4) == true
-                        || Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().GetFlag_IsPraiseEvent(5) == true
-                    )
-                    {
-                        var player = _gameObjectFactory.Get_player();
-                        var camera = _gameObjectFactory.Get_player().Get_CameraFPOP();
-
-                        _gameObjectFactory.Get_player().Set_direction(_gameObjectFactory.Get_player().Get_position() + new Vector3(fowards + backwards + right + left).Normalized());
-                        _gameObjectFactory.Get_player().Set_newPosition(_gameObjectFactory.Get_player().Get_position() + (Vector3.Multiply(_gameObjectFactory.Get_player().Get_direction(), (float)(_gameObjectFactory.Get_player().Get_cameraSpeed() * dt))));
-                        _gameObjectFactory.Get_player().Set_newPosition(_gameObjectFactory.Get_player().Get_position().Normalized() * 101f);
-                        
-                        player.Clamp_Rotations(camera.Calculate_Position_Rotations(_gameObjectFactory.Get_player().Get_position()));
-                        
-                        Quaternion quart = Quaternion.FromEulerAngles(player.Get_Rotation().X, player.Get_Rotation().Y, player.Get_Rotation().Z);
-                        camera.Set_fowards(Vector3.Transform(camera.Get_fowards(), quart));
-                        camera.Set_up(Vector3.Transform(camera.Get_up(), quart));
-                        camera.Set_right(Vector3.Cross(camera.Get_fowards(), camera.Get_up()));
-
-                        OpenTK.Input.Mouse.SetPosition((double)(Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetSettings().Get_ScreenSize_X() / 2), (double)(Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetSettings().Get_ScreenSize_Y() / 2));
-
-                    }
-                    for (int index = 2; index < 6; index++)
-                    {
-                        Avril_FSD.ServerAssembly.Framework.GetGameServer().GetData().GetData_Control().SetIsPraiseEvent(index, false);
-                    }*/
         }
         protected override void OnRenderFrame(FrameEventArgs e)
         {

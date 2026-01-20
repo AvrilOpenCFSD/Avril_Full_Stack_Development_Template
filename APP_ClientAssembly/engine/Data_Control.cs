@@ -1,11 +1,11 @@
-﻿namespace Avril_FSD.ClientAssembly
+﻿using System.Threading;
+
+namespace Avril_FSD.ClientAssembly
 {
     public class Data_Control
     {
         private bool _flag_IsLoaded_Stack_InputAction;
         private bool _flag_IsLoaded_Stack_OutputRecieve;
-        private bool _flag_isNewInputDataReady;
-        private bool _flag_isNewOutputDataReady;
         private bool[] _isPraiseActive;
 
         public Data_Control()
@@ -22,24 +22,26 @@
             }
         }
 
-        public void Push_Stack_Client_InputAction(
+        public void Push_Stack_Client_InputAction(Avril_FSD.ClientAssembly.Framework_Client obj,
             List<Avril_FSD.ClientAssembly.Inputs.Input> stack_Client_InputSend,
             Avril_FSD.ClientAssembly.Inputs.Input BACK_inputDoubleBuffer
         )
         {
             System.Console.WriteLine("entered => Push_Stack_Client_InputAction()");//TestBench
             stack_Client_InputSend.Add(BACK_inputDoubleBuffer);
-            if(stack_Client_InputSend.Count >= 2)
+            if(stack_Client_InputSend.Count > 1)
             {
-                Set_flag_IsLoaded_Stack_InputAction(true);
+                obj.Get_client().Get_data().Get_data_Control().Set_flag_IsLoaded_Stack_InputAction(true);
+                System.Console.WriteLine("Set_flag_IsLoaded_Stack_InputAction = true, " + "stack.count = " + stack_Client_InputSend.Count);//TestBench
             }
             else
             {
-                Set_flag_IsLoaded_Stack_InputAction(false);
+                obj.Get_client().Get_data().Get_data_Control().Set_flag_IsLoaded_Stack_InputAction(false);
+                System.Console.WriteLine("Set_flag_IsLoaded_Stack_InputAction = false, " + "stack.count = " + stack_Client_InputSend.Count);//TestBench
             }
             System.Console.WriteLine("exiting => Push_Stack_Client_InputAction()");//TestBench
         }
-        public void Push_Stack_Client_OutputRecieve(
+        public void Push_Stack_Client_OutputRecieve(Avril_FSD.ClientAssembly.Framework_Client obj,
             List<Avril_FSD.ClientAssembly.Outputs.Output> stack_Client_OutputRecieves,
             Avril_FSD.ClientAssembly.Outputs.Output FRONT_outputDoubleBuffer
         )
@@ -47,14 +49,14 @@
             stack_Client_OutputRecieves.Add(FRONT_outputDoubleBuffer);
             if (stack_Client_OutputRecieves.Count >= 2)
             {
-                Set_flag_IsLoaded_Stack_OutputRecieve(true);
+                obj.Get_client().Get_data().Get_data_Control().Set_flag_IsLoaded_Stack_OutputRecieve(true);
             }
             else
             {
-                Set_flag_IsLoaded_Stack_OutputRecieve(false);
+                obj.Get_client().Get_data().Get_data_Control().Set_flag_IsLoaded_Stack_OutputRecieve(false);
             }
         }
-        public void Pop_Stack_InputAction(
+        public void Pop_Stack_InputAction(Avril_FSD.ClientAssembly.Framework_Client obj,
             Avril_FSD.ClientAssembly.Inputs.Input FRONT_inputDoubleBuffer,
             List<Avril_FSD.ClientAssembly.Inputs.Input> stack_Client_InputSend
         )
@@ -63,14 +65,14 @@
             stack_Client_InputSend.RemoveAt(1);
             if (stack_Client_InputSend.Count >= 2)
             {
-                Set_flag_IsLoaded_Stack_InputAction(true);
+                obj.Get_client().Get_data().Get_data_Control().Set_flag_IsLoaded_Stack_InputAction(true);
             }
             else
             {
-                Set_flag_IsLoaded_Stack_InputAction(false);
+                obj.Get_client().Get_data().Get_data_Control().Set_flag_IsLoaded_Stack_InputAction(false);
             }
         }
-        public void Pop_Stack_OutputRecieve(
+        public void Pop_Stack_OutputRecieve(Avril_FSD.ClientAssembly.Framework_Client obj,
             Avril_FSD.ClientAssembly.Outputs.Output buffer_Output_Recieve_Reference_ForCore,
             List<Avril_FSD.ClientAssembly.Outputs.Output> stack_Client_OutputRecieves
         )
@@ -79,11 +81,11 @@
             stack_Client_OutputRecieves.RemoveAt(1);
             if (stack_Client_OutputRecieves.Count >= 2)
             {
-                Set_flag_IsLoaded_Stack_OutputRecieve(true);
+                obj.Get_client().Get_data().Get_data_Control().Set_flag_IsLoaded_Stack_OutputRecieve(true);
             }
             else
             {
-                Set_flag_IsLoaded_Stack_OutputRecieve(false);
+                obj.Get_client().Get_data().Get_data_Control().Set_flag_IsLoaded_Stack_OutputRecieve(false);
             }
         }
 
@@ -111,14 +113,6 @@
         {
             return _flag_IsLoaded_Stack_OutputRecieve;
         }
-        public bool Get_flag_isNewInputDataReady()
-        {
-            return _flag_isNewInputDataReady;
-        }
-        public bool Get_flag_isNewOutputDataReady()
-        {
-            return _flag_isNewOutputDataReady;
-        }
         public bool Get_isPraiseActive(int praiseEventId)
         {
             return _isPraiseActive[praiseEventId];
@@ -131,14 +125,6 @@
         public void Set_flag_IsLoaded_Stack_OutputRecieve(bool value)
         {
             _flag_IsLoaded_Stack_OutputRecieve = value;
-        }
-        public void Set_flag_isNewInputDataReady(bool value)
-        {
-            _flag_isNewInputDataReady = value;
-        }
-        public void Set_flag_isNewOutputDataReady(bool value)
-        {
-            _flag_isNewOutputDataReady = value;
         }
         public void Set_isPraiseActive(int praiseEventId, bool value)
         {

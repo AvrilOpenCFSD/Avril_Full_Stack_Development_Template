@@ -25,6 +25,8 @@
             System.Console.WriteLine("delta");//TESTBENCH
             obj.Get_client().Get_execute().Create_And_Run_Graphics(obj);
             System.Console.WriteLine("echo");//TESTBENCH
+            obj.Get_client().Get_execute().Get_networking_Client().DeInitialise_networking_Server();
+            System.Console.WriteLine("exiting.");//TESTBENCH
 
         }
         static public Avril_FSD.ClientAssembly.Client Get__client()

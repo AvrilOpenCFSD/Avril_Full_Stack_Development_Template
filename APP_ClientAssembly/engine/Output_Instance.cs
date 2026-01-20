@@ -21,8 +21,10 @@ namespace Avril_FSD.ClientAssembly.Outputs
                 while (Get_buffer_Output_Recieve_Reference_ForCore(index) == null) { }
             }
 
-            _stack_Client_OutputRecieves = new List<Avril_FSD.ClientAssembly.Outputs.Output>(2);
+            _stack_Client_OutputRecieves = new List<Avril_FSD.ClientAssembly.Outputs.Output>();
             while (_stack_Client_OutputRecieves == null) { }
+            _stack_Client_OutputRecieves.Capacity = 1;
+            _stack_Client_OutputRecieves.Add(Get_empty_OutputBuffer());
 
         }
 

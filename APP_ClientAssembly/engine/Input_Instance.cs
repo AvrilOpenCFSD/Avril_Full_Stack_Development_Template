@@ -24,13 +24,10 @@ namespace Avril_FSD.ClientAssembly.Inputs
                 while (_doublebuffer_Client_Input_Send[index_A] == null) { }
             }
 
-            _stack_Client_InputSend = new List<Avril_FSD.ClientAssembly.Inputs.Input>(2);
+            _stack_Client_InputSend = new List<Avril_FSD.ClientAssembly.Inputs.Input>();
             while (_stack_Client_InputSend == null) { }
-            _stack_Client_InputSend.Capacity = 2;
-            for (byte index_B = 0; index_B < _stack_Client_InputSend.Count; index_B++)
-            {
-                _stack_Client_InputSend[index_B] = Get_empty_InputBuffer();
-            }
+            _stack_Client_InputSend.Capacity = 1;
+            _stack_Client_InputSend.Add(Get_empty_InputBuffer());
         }
 
         private UInt16 BoolToInt16(bool value)

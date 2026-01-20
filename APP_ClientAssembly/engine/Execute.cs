@@ -46,7 +46,7 @@ namespace Avril_FSD.ClientAssembly
         {
             byte threadIdCounter = 0;
             obj.Get_client().Get_execute().Set_thread(threadIdCounter, Thread.CurrentThread);
-            obj.Get_client().Get_execute().Get_execute_Control().Set_flag_ThreadInitialised(threadIdCounter, false);
+            obj.Get_client().Get_execute().Get_execute_Control().Set_flag_ThreadInitialised(obj, threadIdCounter, false);
             System.Console.WriteLine("Thread Initalised => CurrentThread()" + (threadIdCounter).ToString());//TESTBENCH
 
             threadIdCounter++;

@@ -42,20 +42,24 @@ namespace Avril_FSD.ClientAssembly
         {
             byte _concurrentThreadId = (byte)(threadId - (byte)2);
             Avril_FSD.ClientAssembly.Framework_Client obj = Avril_FSD.ClientAssembly.Program.Get_framework_Client();
-            obj.Get_client().Get_execute().Get_execute_Control().Set_flag_ThreadInitialised(threadId, false);
-            System.Console.WriteLine("Thread Initalised => Thread_Concurrent()" + (threadId).ToString());//TESTBENCH
+            obj.Get_client().Get_execute().Get_execute_Control().Set_flag_ThreadInitialised(obj, threadId, false);
+            bool doneOnce_A = false;
             while (obj.Get_client().Get_execute().Get_execute_Control().Get_flag_SystemInitialised() == true)
             {
-
+                if (doneOnce_A == false)
+                {
+                    doneOnce_A = true;
+                    obj.Get_client().Get_execute().Get_execute_Control().Set_flag_ThreadInitialised(obj, threadId, false);
+                }
             }
-            System.Console.WriteLine("Thread Starting => Thread_Concurrent()" + (threadId).ToString());//TESTBENCH
-            while (obj.Get_client().Get_execute().Get_execute_Control().Get_flag_SystemInitialised() == false)
+            while (obj.Get_client().Get_execute().Get_execute_Control().Get_exitApplication() == false)
             {
                 if (obj.Get_client().Get_data().Get_data_Control().Get_flag_IsLoaded_Stack_OutputRecieve())
                 {
+                    System.Console.WriteLine("Thread[" + (threadId).ToString() + "] => Get_flag_IsLoaded_Stack_OutputRecieve = " + obj.Get_client().Get_data().Get_data_Control().Get_flag_IsLoaded_Stack_OutputRecieve());//TestBench
                     Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTOUTPUTRECIEVE.Write_Start(obj.Get_client().Get_execute().Get_program_WriteQue_C_OR(), (byte)(_concurrentThreadId + (byte)1));
                     obj.Get_client().Get_algorithms().Get_concurrent(_concurrentThreadId).Get_concurrent_Control().SelectSet_Algorithm_Subset(obj, obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj).Get_praiseEventId(), _concurrentThreadId);
-                    obj.Get_client().Get_data().Get_data_Control().Pop_Stack_OutputRecieve(obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj), obj.Get_client().Get_data().Get_output_Instnace().Get_stack_Client_OutputRecieves());
+                    obj.Get_client().Get_data().Get_data_Control().Pop_Stack_OutputRecieve(obj, obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj), obj.Get_client().Get_data().Get_output_Instnace().Get_stack_Client_OutputRecieves());
                     obj.Get_client().Get_data().Flip_OutBufferToWrite();
                     obj.Get_client().Get_data().Get_data_Control().Do_Store_PraiseOutputRecieve_To_GameInstanceData(obj, obj.Get_client().Get_data().Get_output_Instnace().Get_stack_Client_OutputRecieves().ElementAt(1));
                     obj.Get_client().Get_data().Get_data_Control().Set_isPraiseActive(obj.Get_client().Get_data().Get_output_Instnace().Get_FRONT_outputDoubleBuffer(obj).Get_praiseEventId(), false);
