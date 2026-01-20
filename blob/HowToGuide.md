@@ -546,101 +546,37 @@ namespace Avril_FSD.ClientAssembly
 Thread Input/Output Pop Client Input Action From Stack and Network Send
 https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/Networking_Client.cs
 ````
-public void Thread_IO_Client(byte threadId)
+        static public void Do_Server_Recieve(Avril_FSD.ServerAssembly.Framework_Server obj)
         {
-            Avril_FSD.ClientAssembly.Framework_Client obj = Avril_FSD.ClientAssembly.Program.Get_framework_Client();
-            bool doneOnce = false;
-            while (obj.Get_client().Get_execute().Get_execute_Control().Get_flag_SystemInitialised() == true)
+            _server_IO.WaitForConnection();
+            Avril_FSD.Library_For_WriteEnableForThreadsAt_SERVERINPUTACTION.Write_Start(Avril_FSD.Library_For_Server_Concurrency.Get_program_WriteEnableStack_ServerInputAction(), 0);
+
+            byte[] buffer = new byte[1];
+            int bytesRead = _server_IO.Read(buffer, 0, buffer.Length);
+            byte praiseEventId = buffer[0];
+            Avril_FSD.Library_For_Server_Concurrency.Set_PraiseEventId(obj.Get_server().Get_execute().Get_program_ServerConcurrency(), praiseEventId);//TODO: change to byte
+
+            buffer = new byte[1];
+            bytesRead = _server_IO.Read(buffer, 1, buffer.Length);
+            byte playerID = buffer[0];
+            //Avril_FSD.Library_For_Server_Concurrency.Set_playerId(playerID);//TODO: change to byte
+
+            Avril_FSD.Library_For_Server_Concurrency.Select_Set_Intput_Subset(obj.Get_server().Get_execute().Get_program_ServerConcurrency(), praiseEventId);
+            switch (praiseEventId)
             {
-                if (doneOnce == false)
-                {
-                    doneOnce = true;
-                    obj.Get_client().Get_execute().Get_execute_Control().Set_flag_ThreadInitialised(obj, threadId, false);
-                }
-            }
-            while (obj.Get_client().Get_execute().Get_execute_Control().Get_exitApplication() == false)
-            {
-                StatusCallback status = (ref StatusInfo info) => {
-                    switch (info.connectionInfo.state)
-                    {
-                        case ConnectionState.None:
-                            break;
+                // USER IMPLEMENTATION - ABCDE
+                case 0:
 
-                        case ConnectionState.Connected:
-                            Console.WriteLine("Client connected to server - ID: " + _connection);
-                            if (obj.Get_client().Get_data().Get_data_Control().Get_flag_IsLoaded_Stack_InputAction() == true)
-                            {
-                                System.Console.WriteLine("Thread[" + (threadId).ToString() + "] => IsLoaded_Stack_InputAction = " + obj.Get_client().Get_data().Get_data_Control().Get_flag_IsLoaded_Stack_InputAction());//TestBench
-                                Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Write_Start(obj.Get_client().Get_execute().Get_program_WriteQue_C_IA(), 1);
-                                byte[] data = new byte[64];
-                                obj.Get_client().Get_data().Get_data_Control().Pop_Stack_InputAction(obj, obj.Get_client().Get_data().Get_input_Instnace().Get_FRONT_inputDoubleBuffer(obj), obj.Get_client().Get_data().Get_input_Instnace().Get_stack_Client_InputSend());
-                                obj.Get_client().Get_data().Flip_InBufferToWrite();
-                                obj.Get_client().Get_algorithms().Get_io_ListenRespond().Encode_NetworkingSteam_At_Client_Input(obj, obj.Get_client().Get_data().Get_input_Instnace().Get_BACK_inputDoubleBuffer(obj), data);
-                                _client_SOCKET.SendMessageToConnection(_connection, data);
-                                Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Write_End(obj.Get_client().Get_execute().Get_program_WriteQue_C_IA(), 1);
-                            }
-                            break;
+                    break;
 
-                        case ConnectionState.ClosedByPeer:
-                        case ConnectionState.ProblemDetectedLocally:
-                            _client_SOCKET.CloseConnection(_connection);
-                            Console.WriteLine("Client disconnected from server");
-                            break;
-                    }
-                };
-                _utils = new NetworkingUtils();
-                _utils.SetStatusCallback(status);
-                    
-                _connection = _client_SOCKET.Connect(ref address_SERVER);
-                System.Console.WriteLine("Thread[" + (threadId).ToString() + "] :: _connection = " + (_connection).ToString());//TestBench
-#if VALVESOCKETS_SPAN
-MessageCallback message = (in NetworkingMessage netMessage) => {
-	Console.WriteLine("Message received from server - Channel ID: " + netMessage.channel + ", Data length: " + netMessage.length);
-};
-#else
-                const int maxMessages = 20;
-                NetworkingMessage[] netMessages = new NetworkingMessage[maxMessages];
-#endif
-                System.Console.WriteLine("Thread[" + (threadId).ToString() + "] :: ALPHA");//TestBench
-                while (!Console.KeyAvailable)
-                {
-                    System.Console.WriteLine("Thread[" + (threadId).ToString() + "] :: BRAVO");//TestBench
-                    _client_SOCKET.RunCallbacks();
-
-#if VALVESOCKETS_SPAN
-	client.ReceiveMessagesOnConnection(connection, message, 20);
-#else
-                    int netMessagesCount = _client_SOCKET.ReceiveMessagesOnConnection(_connection, netMessages, maxMessages);
-                    System.Console.WriteLine("Thread[" + (threadId).ToString() + "] :: netMessagesCount = " + netMessagesCount);//TestBench
-                    if (netMessagesCount > 0)
-                    {
-                        for (int i = 0; i < netMessagesCount; i++)
-                        {
-                            ref NetworkingMessage netMessage = ref netMessages[i];
-
-                            Console.WriteLine("Message received from server - Channel ID: " + netMessage.channel + ", Data length: " + netMessage.length);
-                            Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTOUTPUTRECIEVE.Write_Start(obj.Get_client().Get_execute().Get_program_WriteQue_C_OR(), 1);
-                            byte[] buffer = new byte[1024];
-                            netMessage.CopyTo(buffer);
-                            obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj).Set_praiseOutputBuffer_Subset(buffer[0]);
-                            obj.Get_client().Get_algorithms().Get_io_ListenRespond().Decode_NetworkingSteam_At_Client_Recieve(obj, obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj), buffer);
-                            obj.Get_client().Get_data().Flip_OutBufferToWrite();
-                            obj.Get_client().Get_data().Get_data_Control().Push_Stack_Client_OutputRecieve(obj, obj.Get_client().Get_data().Get_output_Instnace().Get_stack_Client_OutputRecieves(), obj.Get_client().Get_data().Get_output_Instnace().Get_FRONT_outputDoubleBuffer(obj));
-                            if (obj.Get_client().Get_data().Get_data_Control().Get_flag_IsLoaded_Stack_OutputRecieve())
-                            {
-                                if (Avril_FSD.Library_For_LaunchEnableForConcurrentThreadsAt_CLIENT.Get_State_LaunchBit(obj.Get_client().Get_execute().Get_program_ConcurrentQue_C()))
-                                {
-                                    Avril_FSD.Library_For_LaunchEnableForConcurrentThreadsAt_CLIENT.Request_Wait_Launch(obj.Get_client().Get_execute().Get_program_ConcurrentQue_C(), Avril_FSD.Library_For_LaunchEnableForConcurrentThreadsAt_CLIENT.Get_coreId_To_Launch(obj.Get_client().Get_execute().Get_program_ConcurrentQue_C()));
-                                }
-                            }
-                            Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTOUTPUTRECIEVE.Write_End(obj.Get_client().Get_execute().Get_program_WriteQue_C_OR(), 1);
-                            netMessage.Destroy();
-                        }
-                    }
-#endif
-
-                    Thread.Sleep(15);
-                }
+                case 1:
+                    buffer = new byte[8];
+                    bytesRead = _server_IO.Read(buffer, 2, buffer.Length);
+                    float temp = System.BitConverter.ToSingle(buffer, 0);
+                    Avril_FSD.Library_For_Praise_1_Events.Set_Praise1_Input_mouseDelta_X(temp);
+                    temp = System.BitConverter.ToSingle(buffer, 4);
+                    Avril_FSD.Library_For_Praise_1_Events.Set_Praise1_Input_mouseDelta_X(temp);
+                    break;
             }
         }
 ````
