@@ -1,134 +1,262 @@
-Framwork Loading
-https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/engine/Execute.cs
+Framework Server Loading
+https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ServerAssembly/gameInstance/Game_Instance.cs
 ````
-namespace Avril_FSD.ClientAssembly
+namespace Avril_FSD.ServerAssembly
 {
-    public class Execute
+    public sealed class Game_Instance : GameWindow
     {
-        private Avril_FSD.ClientAssembly.Execute_Control _execute_Control;
-        private Avril_FSD.ClientAssembly.Networking_Client _networking_Client;
-        private IntPtr programId_ConcurrentQue_C;
-        private IntPtr programId_WriteQue_C_IA;
-        private IntPtr programId_WriteQue_C_OR;
+        private bool done_once;
+        private byte _coreId;
+        private readonly string _title;
+        private double _time;
+        private readonly Color4 _backColor = new Color4(0.1f, 0.1f, 0.3f, 1.0f);
+        private FirstPersonCamera _cameraFP;
+        private ThirdPersonCamera _cameraTP;
+        private Matrix4 _projectionMatrix;
+        private float _fov = 45f;
 
-        private Thread[] _threads = {null, null, null, null, null, null};//number of app shell threads.
+        private KeyboardState _lastKeyboardState;
+        private MouseState _lastMouseState;
 
-        public Execute(int numberOfCores) 
+        private GameObjectFactory _gameObjectFactory;
+        private readonly List<AGameObject> _gameObjects = new List<AGameObject>();
+        
+        
+        private ShaderProgram _texturedProgram;
+        private ShaderProgram _solidProgram;
+        
+        private bool cameraSelector = false;
+       
+        public Game_Instance()
+            : base(960, // initial width
+                540, // initial height
+                GraphicsMode.Default,
+                "",  // initial title
+                GameWindowFlags.FixedWindow,
+                DisplayDevice.Default,
+                4, // OpenGL major version
+                5, // OpenGL minor version
+                GraphicsContextFlags.ForwardCompatible)
         {
-            Set_execute_Control(null);
+            _title += "dreamstatecoding.blogspot.com: OpenGL Version: " + GL.GetString(StringName.Version);
         }
 
-        public void Initialise_Control(int numberOfCores, Global global)
+        protected override void OnResize(EventArgs e)
         {
-            Set_execute_Control(new Avril_FSD.ClientAssembly.Execute_Control(numberOfCores));
-            while (Get_execute_Control() == null) { }
+            GL.Viewport(0, 0, Width, Height);
+            CreateProjection();
         }
 
-        public void Initialise_NetworkingPipes(Avril_FSD.ClientAssembly.Framework_Client obj)
+        protected override void OnLoad(EventArgs e)
         {
-            Set_networking_Client(new Avril_FSD.ClientAssembly.Networking_Client());
-            Get_networking_Client().Initialise_networking_Client();
+            System.Console.WriteLine("OnLoad");
+            VSync = VSyncMode.Off;
+            CreateProjection();
+#if DEBUG
+            _solidProgram = new ShaderProgram();
+            _solidProgram.AddShader(ShaderType.VertexShader, "..\\..\\..\\APP_ServerAssembly\\graphics\\Shaders\\1Vert\\simplePipeVert.c");
+            _solidProgram.AddShader(ShaderType.FragmentShader, "..\\..\\..\\APP_ServerAssembly\\graphics\\Shaders\\5Frag\\simplePipeFrag.c");
+            _solidProgram.Link();
+
+            _texturedProgram = new ShaderProgram();
+            _texturedProgram.AddShader(ShaderType.VertexShader, "..\\..\\..\\APP_ServerAssembly\\graphics\\Shaders\\1Vert\\simplePipeTexVert.c");
+            _texturedProgram.AddShader(ShaderType.FragmentShader, "..\\..\\..\\APP_ServerAssembly\\graphics\\Shaders\\5Frag\\simplePipeTexFrag.c");
+            _texturedProgram.Link();
+
+            var models = new Dictionary<string, ARenderable>();
+            models.Add("Player", new MipMapGeneratedRenderObject(RenderObjectFactory.CreateTexturedCube6(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\gameover.png", 8));
+            models.Add("Wooden", new MipMapGeneratedRenderObject(new IcoSphereFactory().Create(3), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\wooden.png", 8));
+            models.Add("Golden", new MipMapGeneratedRenderObject(new IcoSphereFactory().Create(3), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\golden.bmp", 8));
+            models.Add("Asteroid", new MipMapGeneratedRenderObject(new IcoSphereFactory().Create(3), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\moonmap1k.jpg", 8));
+            models.Add("Spacecraft", new MipMapGeneratedRenderObject(RenderObjectFactory.CreateTexturedCube6(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\spacecraft.png", 8));
+            models.Add("Gameover", new MipMapGeneratedRenderObject(RenderObjectFactory.CreateTexturedCube6(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\gameover.png", 8));
+            models.Add("Bullet", new MipMapGeneratedRenderObject(new IcoSphereFactory().Create(3), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\dotted.png", 8));
+#else
+            _solidProgram = new ShaderProgram();
+            _solidProgram.AddShader(ShaderType.VertexShader, "..\\..\\..\\APP_ServerAssembly\\graphics\\Shaders\\1Vert\\simplePipeVert.c");
+            _solidProgram.AddShader(ShaderType.FragmentShader, "..\\..\\..\\APP_ServerAssembly\\graphics\\Shaders\\5Frag\\simplePipeFrag.c");
+            _solidProgram.Link();
+
+            _texturedProgram = new ShaderProgram();
+            _texturedProgram.AddShader(ShaderType.VertexShader, "..\\..\\..\\APP_ServerAssembly\\graphics\\Shaders\\1Vert\\simplePipeTexVert.c");
+            _texturedProgram.AddShader(ShaderType.FragmentShader, "..\\..\\..\\APP_ServerAssembly\\graphics\\Shaders\\5Frag\\simplePipeTexFrag.c");
+            _texturedProgram.Link();
+
+            var models = new Dictionary<string, ARenderable>();
+            models.Add("Player", new MipMapGeneratedRenderObject(RenderObjectFactory.CreateTexturedCube6(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\gameover.png", 8));
+            models.Add("Wooden", new MipMapGeneratedRenderObject(new IcoSphereFactory().Create(3), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\wooden.png", 8));
+            models.Add("Golden", new MipMapGeneratedRenderObject(new IcoSphereFactory().Create(3), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\golden.bmp", 8));
+            models.Add("Asteroid", new MipMapGeneratedRenderObject(new IcoSphereFactory().Create(3), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\moonmap1k.jpg", 8));
+            models.Add("Spacecraft", new MipMapGeneratedRenderObject(RenderObjectFactory.CreateTexturedCube6(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\spacecraft.png", 8));
+            models.Add("Gameover", new MipMapGeneratedRenderObject(RenderObjectFactory.CreateTexturedCube6(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\gameover.png", 8));
+            models.Add("Bullet", new MipMapGeneratedRenderObject(new IcoSphereFactory().Create(3), _texturedProgram.Id, "..\\..\\..\\APP_ServerAssembly\\graphics\\Textures\\dotted.png", 8));
+#endif
+            //models.Add("TestObject", new TexturedRenderObject(RenderObjectFactory.CreateTexturedCube(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\graphics\Textures\asteroid texture one side.jpg"));
+            //models.Add("TestObjectGen", new MipMapGeneratedRenderObject(RenderObjectFactory.CreateTexturedCube(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\graphics\Textures\asteroid texture one side.jpg", 8));
+            //models.Add("TestObjectPreGen", new MipMapManualRenderObject(RenderObjectFactory.CreateTexturedCube(1, 1, 1), _texturedProgram.Id, "..\\..\\..\\graphics\Textures\asteroid texture one side mipmap levels 0 to 8.bmp", 9));
+
+            _gameObjectFactory = new GameObjectFactory(models);
+
+            _gameObjectFactory.Create_PlayerOnClient();
+            _gameObjects.Add(_gameObjectFactory.Get_player());
+
+            _gameObjects.Add(_gameObjectFactory.CreateSphericalAsteroid("Wooden", new Vector3(10f, 0f, 0f), new Vector3(1f)));
+            _gameObjects.Add(_gameObjectFactory.CreateSphericalAsteroid("Wooden", new Vector3(-10f, 0f, 0f), new Vector3(1f)));
+            _gameObjects.Add(_gameObjectFactory.CreateSphericalAsteroid("Golden", new Vector3(0f, 10f, 0f), new Vector3(1f)));
+            _gameObjects.Add(_gameObjectFactory.CreateSphericalAsteroid("Golden", new Vector3(0f, -10f, 0f), new Vector3(1f)));
+            _gameObjects.Add(_gameObjectFactory.CreateSphericalAsteroid("Asteroid", new Vector3(0f, 0f, 10f), new Vector3(1f)));
+            _gameObjects.Add(_gameObjectFactory.CreateSphericalAsteroid("Asteroid", new Vector3(0f, 0f, -10f), new Vector3(1f)));
+
+            //_camera = new StaticCamera();
+
+            _gameObjectFactory.Get_player().Create_Cameras();
+
+            CursorVisible = false;
+
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            GL.PatchParameter(PatchParameterInt.PatchVertices, 3);
+            GL.PointSize(3);
+            GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.CullFace);            
+            Closed += OnClosed;
+
+            Avril_FSD.ServerAssembly.Framework_Server obj = Avril_FSD.ServerAssembly.Program.Get_framework_Server();
+            obj.Get_server().Get_execute().Initialise_Threads(obj);
+
+            System.Console.WriteLine("OnLoad .. done");
         }
 
-        public void Initialise_Libraries()
+        private void OnClosed(object sender, EventArgs eventArgs)
         {
-            programId_ConcurrentQue_C = Avril_FSD.Library_For_LaunchEnableForConcurrentThreadsAt_CLIENT.Initialise_LaunchEnableForConcurrentThreadsAt();
-            System.Console.WriteLine("created Library_For_LaunchEnableForConcurrentThreadsAt_CLIENT");
-
-            programId_WriteQue_C_IA = Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Initialise_WriteEnable();
-            System.Console.WriteLine("created Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION");
-
-            programId_WriteQue_C_OR = Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTOUTPUTRECIEVE.Initialise_WriteEnable();
-            System.Console.WriteLine("created Library_For_WriteEnableForThreadsAt_CLIENTOUTPUTRECIEVE");
-
+            Exit();
         }
-        public void Initialise_Threads(Avril_FSD.ClientAssembly.Framework_Client obj)
+
+        public override void Exit()
         {
-            byte threadIdCounter = 0;
-            obj.Get_client().Get_execute().Set_thread(threadIdCounter, Thread.CurrentThread);
-            obj.Get_client().Get_execute().Get_execute_Control().Set_flag_ThreadInitialised(threadIdCounter, false);
-            System.Console.WriteLine("Thread Initalised => CurrentThread()" + (threadIdCounter).ToString());//TESTBENCH
+            System.Console.WriteLine("Exit called");
+            Avril_FSD.ServerAssembly.Framework_Server obj = Avril_FSD.ServerAssembly.Program.Get_framework_Server();
+            obj.Get_server().Get_execute().Get_execute_Control().Set_exitApplication(true);
+            obj.Get_server().Get_execute().Get_networking_Server().DeInitialise_networking_Server();
+            _gameObjectFactory.Dispose();
+            _solidProgram.Dispose();
+            _texturedProgram.Dispose();
+            base.Exit();
+        }
 
-            threadIdCounter++;
-            obj.Get_client().Get_execute().Set_thread(threadIdCounter, new Thread(() => _networking_Client.Thread_IO_Client(threadIdCounter)));
-            obj.Get_client().Get_execute().Get_thread(threadIdCounter).Start();
-            System.Console.WriteLine("Thread Initalised => Thread_IO_Client on core " + (threadIdCounter).ToString());//TESTBENCH
+        private void CreateProjection()
+        {
 
-            threadIdCounter++;
-            while (threadIdCounter < obj.Get_client().Get_global().Get_numberOfCores())
+            var aspectRatio = (float)Width / Height;
+            _projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(
+                _fov * ((float)Math.PI / 180f), // field of view angle, in radians
+                aspectRatio,                // current window aspect ratio
+                0.1f,                       // near plane
+                4000f);                     // far plane
+        }
+
+        protected override void OnUpdateFrame(FrameEventArgs e)
+        {
+            _time += e.Time;
+            foreach (var item in _gameObjects)
             {
-                obj.Get_client().Get_execute().Set_thread(threadIdCounter, new Thread(() => obj.Get_client().Get_algorithms().Get_concurrent((byte)(threadIdCounter - (byte)2)).Thread_Concurrent(threadIdCounter)));
-                obj.Get_client().Get_execute().Get_thread(threadIdCounter).Start();
-                System.Console.WriteLine("Thread Initalised => Thread_Concurrent on core " + (threadIdCounter).ToString());//TESTBENCH
-                threadIdCounter++;
+                item.Update(_time, e.Time);
+            }
+            if(Avril_FSD.ServerAssembly.Program.Get_framework_Server().Get_server().Get_execute().Get_execute_Control().Get_exitApplication() == false)
+            {
+                HandleKeyboard(e.Time);
+                HandleMouse();
+                switch (cameraSelector)
+                {
+                    case false:
+                        Get_gameObjectFactory().Get_player().Get_CameraFP().Update(_time, e.Time);
+                        break;
+
+                    case true:
+                        Get_gameObjectFactory().Get_player().Get_CameraTP().Update(_time, e.Time);
+                        break;
+                }
             }
         }
-
-        public void Create_And_Run_Graphics(Avril_FSD.ClientAssembly.Framework_Client obj)
+        private void HandleMouse()
         {
-            System.Console.WriteLine("starting = > gameInstance");//TESTBENCH
-            using (Avril_FSD.ClientAssembly.Game_Instance gameInstance = new Avril_FSD.ClientAssembly.Game_Instance())
+            //Console.WriteLine("TESTBENCH => HandleMouse");
+            MouseState mouseState = Mouse.GetCursorState();
+        }
+        private void HandleKeyboard(double dt)
+        {
+            var keyState = Keyboard.GetState();
+
+            if (keyState.IsKeyDown(Key.Escape))
             {
-                gameInstance.Run(obj.Get_client().Get_data().Get_settings().Get_refreshRate());
+                Exit();
             }
-        }
+            if (keyState.IsKeyDown(Key.W))
+            {
+                
+            }
+            if (keyState.IsKeyDown(Key.S))
+            {
+                
+            }
 
-        public Avril_FSD.ClientAssembly.Execute_Control Get_execute_Control()
-        {
-            return _execute_Control;
+            if (keyState.IsKeyDown(Key.A))
+            {
+                
+            }
+            if (keyState.IsKeyDown(Key.D))
+            {
+                
+            }
+            _lastKeyboardState = keyState;
         }
-        public Avril_FSD.ClientAssembly.Networking_Client Get_networking_Client()
+        protected override void OnRenderFrame(FrameEventArgs e)
         {
-            return _networking_Client;
-        }
+            Title = $"{_title}: FPS:{1f / e.Time:0000.0}, obj:{_gameObjects.Count}";
+            GL.ClearColor(Color.Black);// _backColor);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
+            int lastProgram = -1;
+            foreach (var obj in _gameObjects)
+            {
+                var program = obj.Model.Program;
+                if (lastProgram != program)
+                    GL.UniformMatrix4(20, false, ref _projectionMatrix);
+                lastProgram = obj.Model.Program;
+                switch (cameraSelector)
+                {
+                    case false:
+                        obj.Render(Get_gameObjectFactory().Get_player().Get_CameraFP());
+                        break;
 
-        public IntPtr Get_program_ConcurrentQue_C()
-        {
-            return programId_ConcurrentQue_C;
+                    case true:
+                        obj.Render(Get_gameObjectFactory().Get_player().Get_CameraTP());
+                        break;
+                }
+                
 
+            }
+            SwapBuffers();
         }
-        public IntPtr Get_program_WriteQue_C_IA()
+        public byte Get_coreId()
         {
-            return programId_WriteQue_C_IA;
+            return _coreId;
         }
-        public IntPtr Get_program_WriteQue_C_OR()
+        public bool Get_cameraSelector()
         {
-            return programId_WriteQue_C_OR;
+            return cameraSelector;
         }
-        public Thread Get_thread(byte index)
+        public GameObjectFactory Get_gameObjectFactory()
         {
-            return _threads[index];
+            return _gameObjectFactory;
         }
-
-        private void Set_execute_Control(Avril_FSD.ClientAssembly.Execute_Control execute_Control)
+        public byte Set_coreId(byte value)
         {
-            _execute_Control = execute_Control;
+            return _coreId = value;
         }
-        private void Set_networking_Client(Avril_FSD.ClientAssembly.Networking_Client networking_Client)
-        {
-            _networking_Client = networking_Client;
-        }
-        private void Set_program_ConcurrentQue_C(IntPtr programID)
-        {
-            programId_ConcurrentQue_C = programID;
-        }
-        private void Set_programId_WriteQue_C_IA(IntPtr programId)
-        {
-            programId_WriteQue_C_IA = programId;
-        }
-        private void Set_programId_WriteQue_C_OR(IntPtr programId)
-        {
-            programId_WriteQue_C_OR = programId;
-        }
-        private void Set_thread(byte index, Thread thread) 
-        {
-            _threads[index] = thread;
-        }
-    }   
+    }
 }
 ````
-Client Periphean Scanner
+Framwork Client Loading
 https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/gameInstance/Game_Instance.cs
 ````
 namespace Avril_FSD.ClientAssembly
@@ -267,6 +395,9 @@ namespace Avril_FSD.ClientAssembly
         public override void Exit()
         {
             System.Console.WriteLine("Exit called");
+            Avril_FSD.ClientAssembly.Framework_Client obj = Avril_FSD.ClientAssembly.Program.Get_framework_Client();
+            obj.Get_client().Get_execute().Get_execute_Control().Set_exitApplication(true);
+            obj.Get_client().Get_execute().Get_networking_Client().DeInitialise_networking_Server();
             _gameObjectFactory.Dispose();
             _solidProgram.Dispose();
             _texturedProgram.Dispose();
@@ -287,17 +418,18 @@ namespace Avril_FSD.ClientAssembly
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             Avril_FSD.ClientAssembly.Framework_Client obj = Program.Get_framework_Client();
-            if (obj.Get_client().Get_execute().Get_execute_Control().Get_flag_SystemInitialised() == false)
+            if (obj.Get_client().Get_execute().Get_execute_Control().Get_exitApplication() == false)
             {
+                Console.WriteLine("TESTBENCH => Get_exitApplication() = " + obj.Get_client().Get_execute().Get_execute_Control().Get_exitApplication());
+                Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Write_Start(obj.Get_client().Get_execute().Get_program_WriteQue_C_IA(), 0);
+                HandleKeyboard(obj, e.Time);
+                HandleMouse(obj);
+                Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Write_End(obj.Get_client().Get_execute().Get_program_WriteQue_C_IA(), 0);
                 _time += e.Time;
                 foreach (var item in _gameObjects)
                 {
                     item.Update(_time, e.Time);
                 }
-                Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Write_Start(obj.Get_client().Get_execute().Get_program_WriteQue_C_IA(), 0);
-                HandleKeyboard(obj, e.Time);
-                HandleMouse(obj);
-                Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Write_End(obj.Get_client().Get_execute().Get_program_WriteQue_C_IA(), 0);
                 switch (cameraSelector)
                 {
                     case false:
@@ -318,7 +450,7 @@ namespace Avril_FSD.ClientAssembly
             //Console.WriteLine("Get_isPraiseActive() = " + obj.Get_client().Get_data().Get_data_Control().Get_isPraiseActive(1));
             if (obj.Get_client().Get_data().Get_data_Control().Get_isPraiseActive(1) == false)
             {
-                //Console.WriteLine("TESTBENCH => Do PRAISE 1 start");
+                Console.WriteLine("TESTBENCH => Do PRAISE 1 start");
                 obj.Get_client().Get_data().Get_data_Control().Set_isPraiseActive(1, true);
                 buffer.Set_playerId(0);
                 buffer.Set_praiseEventId(1);
@@ -327,8 +459,8 @@ namespace Avril_FSD.ClientAssembly
                 subset.Set_Mouse_X(mouseState.X);
                 subset.Set_Mouse_Y(mouseState.Y);
                 obj.Get_client().Get_data().Flip_InBufferToWrite();
-                obj.Get_client().Get_data().Get_data_Control().Push_Stack_Client_InputAction(obj.Get_client().Get_data().Get_input_Instnace().Get_stack_Client_InputSend(), obj.Get_client().Get_data().Get_input_Instnace().Get_BACK_inputDoubleBuffer(obj));
-                //Console.WriteLine("TESTBENCH => Do PRAISE 1 end");
+                obj.Get_client().Get_data().Get_data_Control().Push_Stack_Client_InputAction(obj, obj.Get_client().Get_data().Get_input_Instnace().Get_stack_Client_InputSend(), obj.Get_client().Get_data().Get_input_Instnace().Get_BACK_inputDoubleBuffer(obj));
+                Console.WriteLine("TESTBENCH => Do PRAISE 1 end");
             }
         }
         private void HandleKeyboard(Avril_FSD.ClientAssembly.Framework_Client obj, double dt)
@@ -411,32 +543,198 @@ namespace Avril_FSD.ClientAssembly
     }
 }
 ````
-Stack at Client Input Action
-https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/engine/IO_Listen_Respond.cs
+Thread Input/Output Pop Client Input Action From Stack of Client Input Actions
+https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/Networking_Client.cs
 ````
-        public void Encode_NetworkingSteam_At_Client_Input(Avril_FSD.ClientAssembly.Framework_Client obj, Avril_FSD.ClientAssembly.Inputs.Input input, byte[] data)
+public void Thread_IO_Client(byte threadId)
         {
-            data[0] = input.Get_praiseEventId();
-            data[1] = input.Get_playerId();
-            switch (input.Get_praiseEventId())
+            Avril_FSD.ClientAssembly.Framework_Client obj = Avril_FSD.ClientAssembly.Program.Get_framework_Client();
+            bool doneOnce = false;
+            while (obj.Get_client().Get_execute().Get_execute_Control().Get_flag_SystemInitialised() == true)
             {
-                case 0:
-                    break;
+                if (doneOnce == false)
+                {
+                    doneOnce = true;
+                    obj.Get_client().Get_execute().Get_execute_Control().Set_flag_ThreadInitialised(obj, threadId, false);
+                }
+            }
+            while (obj.Get_client().Get_execute().Get_execute_Control().Get_exitApplication() == false)
+            {
+                StatusCallback status = (ref StatusInfo info) => {
+                    switch (info.connectionInfo.state)
+                    {
+                        case ConnectionState.None:
+                            break;
 
-                case 1:
-                    var input_Subset_Praise1 = (Avril_FSD.ClientAssembly.Praise_Files.Praise1_Input)input.Get_praiseInputBuffer_Subset();
-                    byte[] byteArray = new byte[4];
-                    byteArray = BitConverter.GetBytes(input_Subset_Praise1.Get_Mouse_X());
-                    for (byte index = 0; index < 4; index++)
-                    {
-                        data[index + 2] = byteArray[index];
+                        case ConnectionState.Connected:
+                            Console.WriteLine("Client connected to server - ID: " + _connection);
+                            if (obj.Get_client().Get_data().Get_data_Control().Get_flag_IsLoaded_Stack_InputAction() == true)
+                            {
+                                System.Console.WriteLine("Thread[" + (threadId).ToString() + "] => IsLoaded_Stack_InputAction = " + obj.Get_client().Get_data().Get_data_Control().Get_flag_IsLoaded_Stack_InputAction());//TestBench
+                                Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Write_Start(obj.Get_client().Get_execute().Get_program_WriteQue_C_IA(), 1);
+                                byte[] data = new byte[64];
+                                obj.Get_client().Get_data().Get_data_Control().Pop_Stack_InputAction(obj, obj.Get_client().Get_data().Get_input_Instnace().Get_FRONT_inputDoubleBuffer(obj), obj.Get_client().Get_data().Get_input_Instnace().Get_stack_Client_InputSend());
+                                obj.Get_client().Get_data().Flip_InBufferToWrite();
+                                obj.Get_client().Get_algorithms().Get_io_ListenRespond().Encode_NetworkingSteam_At_Client_Input(obj, obj.Get_client().Get_data().Get_input_Instnace().Get_BACK_inputDoubleBuffer(obj), data);
+                                _client_SOCKET.SendMessageToConnection(_connection, data);
+                                Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTINPUTACTION.Write_End(obj.Get_client().Get_execute().Get_program_WriteQue_C_IA(), 1);
+                            }
+                            break;
+
+                        case ConnectionState.ClosedByPeer:
+                        case ConnectionState.ProblemDetectedLocally:
+                            _client_SOCKET.CloseConnection(_connection);
+                            Console.WriteLine("Client disconnected from server");
+                            break;
                     }
-                    byteArray = BitConverter.GetBytes(input_Subset_Praise1.Get_Mouse_Y());
-                    for (byte index = 0; index < 4; index++)
+                };
+                _utils = new NetworkingUtils();
+                _utils.SetStatusCallback(status);
+                    
+                _connection = _client_SOCKET.Connect(ref address_SERVER);
+                System.Console.WriteLine("Thread[" + (threadId).ToString() + "] :: _connection = " + (_connection).ToString());//TestBench
+#if VALVESOCKETS_SPAN
+MessageCallback message = (in NetworkingMessage netMessage) => {
+	Console.WriteLine("Message received from server - Channel ID: " + netMessage.channel + ", Data length: " + netMessage.length);
+};
+#else
+                const int maxMessages = 20;
+                NetworkingMessage[] netMessages = new NetworkingMessage[maxMessages];
+#endif
+                System.Console.WriteLine("Thread[" + (threadId).ToString() + "] :: ALPHA");//TestBench
+                while (!Console.KeyAvailable)
+                {
+                    System.Console.WriteLine("Thread[" + (threadId).ToString() + "] :: BRAVO");//TestBench
+                    _client_SOCKET.RunCallbacks();
+
+#if VALVESOCKETS_SPAN
+	client.ReceiveMessagesOnConnection(connection, message, 20);
+#else
+                    int netMessagesCount = _client_SOCKET.ReceiveMessagesOnConnection(_connection, netMessages, maxMessages);
+                    System.Console.WriteLine("Thread[" + (threadId).ToString() + "] :: netMessagesCount = " + netMessagesCount);//TestBench
+                    if (netMessagesCount > 0)
                     {
-                        data[index + 6] = byteArray[index];
+                        for (int i = 0; i < netMessagesCount; i++)
+                        {
+                            ref NetworkingMessage netMessage = ref netMessages[i];
+
+                            Console.WriteLine("Message received from server - Channel ID: " + netMessage.channel + ", Data length: " + netMessage.length);
+                            Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTOUTPUTRECIEVE.Write_Start(obj.Get_client().Get_execute().Get_program_WriteQue_C_OR(), 1);
+                            byte[] buffer = new byte[1024];
+                            netMessage.CopyTo(buffer);
+                            obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj).Set_praiseOutputBuffer_Subset(buffer[0]);
+                            obj.Get_client().Get_algorithms().Get_io_ListenRespond().Decode_NetworkingSteam_At_Client_Recieve(obj, obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj), buffer);
+                            obj.Get_client().Get_data().Flip_OutBufferToWrite();
+                            obj.Get_client().Get_data().Get_data_Control().Push_Stack_Client_OutputRecieve(obj, obj.Get_client().Get_data().Get_output_Instnace().Get_stack_Client_OutputRecieves(), obj.Get_client().Get_data().Get_output_Instnace().Get_FRONT_outputDoubleBuffer(obj));
+                            if (obj.Get_client().Get_data().Get_data_Control().Get_flag_IsLoaded_Stack_OutputRecieve())
+                            {
+                                if (Avril_FSD.Library_For_LaunchEnableForConcurrentThreadsAt_CLIENT.Get_State_LaunchBit(obj.Get_client().Get_execute().Get_program_ConcurrentQue_C()))
+                                {
+                                    Avril_FSD.Library_For_LaunchEnableForConcurrentThreadsAt_CLIENT.Request_Wait_Launch(obj.Get_client().Get_execute().Get_program_ConcurrentQue_C(), Avril_FSD.Library_For_LaunchEnableForConcurrentThreadsAt_CLIENT.Get_coreId_To_Launch(obj.Get_client().Get_execute().Get_program_ConcurrentQue_C()));
+                                }
+                            }
+                            Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTOUTPUTRECIEVE.Write_End(obj.Get_client().Get_execute().Get_program_WriteQue_C_OR(), 1);
+                            netMessage.Destroy();
+                        }
                     }
-                    break;
+#endif
+
+                    Thread.Sleep(15);
+                }
             }
         }
+````
+Network Data Send From Client To Server
+https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/SIM_Networking.cs
+````
+    static public void Do_Client_Send(Avril_FSD.ClientAssembly.Framework_Client obj)
+    {
+        
+        _client_Send.Connect();
+        byte praiseEventId = obj.Get_client().Get_data().Get_input_Instnace().Get_BACK_inputDoubleBuffer(obj).Get_praiseEventId();
+        byte playerId = obj.Get_client().Get_data().Get_input_Instnace().Get_BACK_inputDoubleBuffer(obj).Get_playerId();
+        switch (praiseEventId)
+        {
+        // USER IMPLAEMENTATION - ABCDE
+        case 0:
+
+            break;
+
+        case 1:
+            byte[] buffer = new byte[10];
+            buffer[0] = praiseEventId;
+            buffer[1] = playerId;
+            Avril_FSD.ClientAssembly.Praise_Files.Praise1_Input subset = (Avril_FSD.ClientAssembly.Praise_Files.Praise1_Input)obj.Get_client().Get_data().Get_input_Instnace().Get_BACK_inputDoubleBuffer(obj).Get_praiseInputBuffer_Subset();
+            byte[] byteArray = BitConverter.GetBytes(subset.Get_Mouse_X());
+            for (ushort index = 0; index < 4; index++)
+            {
+                buffer[index + 2] = byteArray[index];
+            }
+            byteArray = BitConverter.GetBytes(subset.Get_Mouse_Y());
+            for (ushort index = 0; index < 4; index++)
+            {
+                buffer[index + 6] = byteArray[index];
+            }
+            _client_Send.Write(buffer, 0, buffer.Length);
+            break;
+        }
+        _client_Send.Close();
+    }
+````
+Network Data Server Recieve From Client
+https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ClientAssembly/SIM_Networking.cs
+````
+static public void Do_Client_Recieve(Avril_FSD.ClientAssembly.Framework_Client obj)
+        {
+            
+            _client_Recieve.Connect();
+            Avril_FSD.Library_For_WriteEnableForThreadsAt_CLIENTOUTPUTRECIEVE.Write_Start(obj.Get_client().Get_execute().Get_program_WriteQue_C_OR(), 1);
+
+            byte[] buffer = new byte[1];
+            int bytesRead = _client_Recieve.Read(buffer, 0, buffer.Length);
+            byte priaseEventId = buffer[0];
+            obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj).Set_praiseEventId(priaseEventId);
+
+            buffer = new byte[1];
+            bytesRead = _client_Recieve.Read(buffer, 1, buffer.Length);
+            byte playerId = buffer[1];
+            obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj).Set_playerId(playerId);
+
+            switch (priaseEventId)
+            {
+            case 0:
+
+                break;
+
+            case 1:
+
+                Avril_FSD.ClientAssembly.Praise_Files.Praise1_Output output_Subset = (Avril_FSD.ClientAssembly.Praise_Files.Praise1_Output)obj.Get_client().Get_data().Get_output_Instnace().Get_BACK_outputDoubleBuffer(obj).Get_praiseOutputBuffer_Subset();
+                buffer = new byte[12];
+                bytesRead = _client_Recieve.Read(buffer, 2, buffer.Length);
+                float temp_X = System.BitConverter.ToSingle(buffer, 0);
+                float temp_Y = System.BitConverter.ToSingle(buffer, 4);
+                float temp_Z = System.BitConverter.ToSingle(buffer, 8);
+                Vector3 temp_Vec = new Vector3(temp_X, temp_Y, temp_Z);
+                output_Subset.Set_fowards(temp_Vec);
+
+                buffer = new byte[12];
+                bytesRead = _client_Recieve.Read(buffer, 14, buffer.Length);
+                temp_X = System.BitConverter.ToSingle(buffer, 0);
+                temp_Y = System.BitConverter.ToSingle(buffer, 4);
+                temp_Z = System.BitConverter.ToSingle(buffer, 8);
+                temp_Vec = new Vector3(temp_X, temp_Y, temp_Z);
+                output_Subset.Set_right(temp_Vec);
+
+                buffer = new byte[12];
+                bytesRead = _client_Recieve.Read(buffer, 26, buffer.Length);
+                temp_X = System.BitConverter.ToSingle(buffer, 0);
+                temp_Y = System.BitConverter.ToSingle(buffer, 4);
+                temp_Z = System.BitConverter.ToSingle(buffer, 8);
+                temp_Vec = new Vector3(temp_X, temp_Y, temp_Z);
+                output_Subset.Set_up(temp_Vec);
+                break;
+            }
+            _client_Recieve.Close();
+        }
+    }
 ````
