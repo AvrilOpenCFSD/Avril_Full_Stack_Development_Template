@@ -1,6 +1,6 @@
 # Full Stack Development Template.
 
-FLORENCE - Architecture
+Architecture
 https://drive.google.com/file/d/1svuNgH-MlriL9qiP9rHUULPCRE5zqDuz/view?usp=drive_link
 
 How To Guide - Stack Flow From Client Input Scanner To Server And Back To Client.
