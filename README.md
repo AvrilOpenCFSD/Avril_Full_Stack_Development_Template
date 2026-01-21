@@ -7,8 +7,8 @@ How To Guide - Stack Flow From Client Input Scanner To Server And Back To Client
 https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/blob/HowToGuide.md
 
 ## - Avril Server Concurrency.
-## - Avril Server Assembly.
-## - Avril Client Assembly.
+## - Avril Server Shell Assembly.
+## - Avril Client Shell Assembly.
 
 ### C# .NET Console.
 
