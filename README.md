@@ -4,7 +4,7 @@ Architecture
  - https://drive.google.com/file/d/1svuNgH-MlriL9qiP9rHUULPCRE5zqDuz/view?usp=drive_link
 
 How To Guide - Stack Flow From Client Input Scanner To Server And Back To Client.
- - https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/blob/How%20To%20Guide%20-%20Stack%20Flow%20From%20Client%20Input%20Scanner%20To%20Server%20And%20Back%20To%20Client.md
+ - https://github.com/AvrilOpenCFSD/Avril_Full_Stack_Development_Template/blob/master/blob/How%20To%20Guide%20-%20Stack%20Flow%20From%20Client%20Input%20Scanner%20To%20Server%20And%20Back%20To%20Client.md
 
 ## - Avril Server Concurrency.
 ## - Avril Server Shell Assembly.
