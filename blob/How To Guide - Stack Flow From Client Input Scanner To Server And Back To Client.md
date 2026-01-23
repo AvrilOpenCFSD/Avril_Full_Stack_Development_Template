@@ -1,4 +1,5 @@
 # Avril - OpenCFSD (Concurrent Full Stack Development).
+<img width="1550" height="829" alt="flow chart" src="https://github.com/user-attachments/assets/2f06722a-0ba8-4c80-94f4-6e4d447dc4fc" />
 
 ## Execute Server.
 https://github.com/OpenFSD/Avril_Full_Stack_Development_Template/blob/master/APP_ServerAssembly/engine/Execute.cs
