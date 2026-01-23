@@ -1,7 +1,14 @@
-# Full Stack Development Template.
+# Avril - Template for Open Concurrent Full Stack Development.
+
+Architecture
+ - https://drive.google.com/file/d/1svuNgH-MlriL9qiP9rHUULPCRE5zqDuz/view?usp=drive_link
+
+How To Guide - Stack Flow From Client Input Scanner To Server And Back To Client.
+ - https://github.com/AvrilOpenCFSD/Avril_Full_Stack_Development_Template/blob/master/blob/How%20To%20Guide%20-%20Stack%20Flow%20From%20Client%20Input%20Scanner%20To%20Server%20And%20Back%20To%20Client.md
+
 ## - Avril Server Concurrency.
-## - Avril Server Assembly.
-## - Avril Client Assembly.
+## - Avril Server Shell Assembly.
+## - Avril Client Shell Assembly.
 
 ### C# .NET Console.
 
@@ -21,15 +28,15 @@ Version 17.13.4
 
 ## Dependencies.
 ### Server Library.
- - https://github.com/OpenFSD/ServerConcurrency
+ - https://github.com/AvrilOpenCFSD/LIB_Concurrent_IO_Server
 
 ### WriteEnableForThreadsAtStacks.
- - https://github.com/OpenFSD/LIB_WriteEnableForThreadsAt_STACK
+ - https://github.com/AvrilOpenCFSD/LIB_WriteEnableForThreadsAt_STACK
 #### Similar Repositiry.
  - https://github.com/cameron314/readerwriterqueue
    
 ### LaunchEnableForConcurrentThreadsAtEnds
- - https://github.com/OpenFSD/LIB_LaunchEnableForConcurrentThreadsAt_END
+ - https://github.com/AvrilOpenCFSD/LIB_LaunchEnableForConcurrentThreadsAt_END
 #### Similar Repositiry.
  - https://github.com/cameron314/concurrentqueue
    
@@ -40,6 +47,9 @@ Version 17.13.4
 ### OpenTK
 Version: 2.0
 
+#### Tutorial(s): Neo Kabuto's Blog
+ - https://neokabuto.blogspot.com/p/tutorials.html
+   
 ### .Net.
 Version: .Net 8.0
 
