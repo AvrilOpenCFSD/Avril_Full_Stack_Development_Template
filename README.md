@@ -2,7 +2,7 @@
 <img width="1550" height="829" alt="flow chart" src="https://github.com/user-attachments/assets/bae2494f-c40e-4150-9311-74b2dc46381e" />
 
 ## How To Guide - Stack Flow From Client Input Scanner To Server And Back To Client.
- - https://github.com/AvrilOpenCFSD/Avril_Full_Stack_Development_Template/blob/master/blob/How%20To%20Guide%20-%20Stack%20Flow%20From%20Client%20Input%20Scanner%20To%20Server%20And%20Back%20To%20Client.md
+ - https://github.com/OpenAvril/OpenAvrilCFSD-TEMPLATE-for-Concurrenct-Full-Stack-Development/blob/master/blob/How%20To%20Guide%20-%20Stack%20Flow%20From%20Client%20Input%20Scanner%20To%20Server%20And%20Back%20To%20Client.md
 
 ## - Avril Server Concurrency.
 ### Architecture
