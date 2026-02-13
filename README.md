@@ -33,15 +33,15 @@ Version 17.13.4
 
 ## Dependencies.
 ### Server Library.
- - https://github.com/AvrilOpenCFSD/LIB_Concurrent_IO_Server
+ - https://github.com/OpenAvril/LIB_OpenAvrilConcurrent_IO_Server
 
 ### WriteEnableForThreadsAtStacks.
- - https://github.com/AvrilOpenCFSD/LIB_WriteEnableForThreadsAt_STACK
+ - https://github.com/OpenAvril/LIB_WriteEnableForThreadsAt_STACK
 #### Similar Repositiry.
  - https://github.com/cameron314/readerwriterqueue
    
 ### LaunchEnableForConcurrentThreadsAtEnds
- - https://github.com/AvrilOpenCFSD/LIB_LaunchEnableForConcurrentThreadsAt_END
+ - https://github.com/OpenAvril/LIB_LaunchEnableForConcurrentThreadsAt_END
 #### Similar Repositiry.
  - https://github.com/cameron314/concurrentqueue
    
